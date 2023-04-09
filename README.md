@@ -1,5 +1,10 @@
-# Inst-Inpaint
+# Inst-Inpaint: Instructing to Remove Objects with Diffusion Models
 
-A novel inpainting framework that can remove objects from images based on the instructions given as text prompts.
+> Inst-Inpaint: Instructing to Remove Objects with Diffusion Models 
+> http://instinpaint.abyildirim.com/
 
-Code coming soon...
+Update: We released the Hugging Face demo on April 9. The code and the dataset are coming soon.   
+
+[Paper](https://arxiv.org/abs/2304.03246) | [Project Website](http://instinpaint.abyildirim.com/) | [Hugging Face Demo](https://huggingface.co/spaces/abyildirim/inst-inpaint)
+
+![Inst-Inpaint Teaser](./assets/inst_inpaint_teaser.svg)
