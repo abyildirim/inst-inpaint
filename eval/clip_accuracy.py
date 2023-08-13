@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from torch.utils.data import Dataset,DataLoader
+from torch.utils.data import Dataset, DataLoader
 import torch
 from PIL import Image
 import json
@@ -81,6 +81,17 @@ class InferenceDataset(Dataset):
             classes.add(self.test_scene[img_id]["objects"][obj_id]["name"])
         self.classes = list(classes)
 
+    def add_padding(self, image):	
+        padding_color = (0,0,0)
+        width, height = image.size	
+        if width > height:	
+            padded_image = Image.new(image.mode, (width, width), padding_color)	
+            padded_image.paste(image, (0, (width - height) // 2))	
+        else:	
+            padded_image = Image.new(image.mode, (height, height), padding_color)	
+            padded_image.paste(image, ((height - width) // 2, 0))	
+        return padded_image
+
     def __getitem__(self, idx):
         scene_id = self.ids[idx]
         img_id, obj_id = scene_id.split("-")
@@ -102,9 +113,9 @@ class InferenceDataset(Dataset):
         scale_ratio =  self.eval_resolution / min(image_size_orig)
         object_bbox = np.array(self.scale_box(object_bbox, scale_ratio))
         return (
-            self.clip_preprocess(source_image.crop(object_bbox)),
-            self.clip_preprocess(target_image.crop(object_bbox)),
-            self.clip_preprocess(inpainted_image.crop(object_bbox)),
+            self.clip_preprocess(self.add_padding(source_image.crop(object_bbox))),	
+            self.clip_preprocess(self.add_padding(target_image.crop(object_bbox))),	
+            self.clip_preprocess(self.add_padding(inpainted_image.crop(object_bbox))),
             instruction,
             object_name,
             scene_id,

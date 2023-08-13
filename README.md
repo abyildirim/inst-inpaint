@@ -150,9 +150,9 @@ There are two evaluation metrics implemented and used in this study, which are C
 | Eval Metric | Result
 | :--- | :----------
 | FID | 5.68
-| CLIP@1 | 0.80
-| CLIP@3 | 0.67
-| CLIP@5 | 0.61
+| CLIP@1 | 0.77
+| CLIP@3 | 0.64
+| CLIP@5 | 0.57
 
 Note that the CLIP accuracy metric considers top N class predictions during the evaluation process. N is set to 1, 3, and 5 in the evaluation script. These metrics are represented as CLIP@N.
 
