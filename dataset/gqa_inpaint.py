@@ -264,6 +264,7 @@ class GQAInpaintBase(Dataset):
 
             if is_irrelevant_text:
                 target_image = np.copy(source_image)
+                mask = np.zeros_like(mask)
 
         sample["target_image"] = target_image
         sample["source_image"] = source_image
