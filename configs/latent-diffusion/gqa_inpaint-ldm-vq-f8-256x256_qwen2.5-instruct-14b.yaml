@@ -1,0 +1,112 @@
+model:
+  base_learning_rate: 2.0e-06
+  target: ldm.models.diffusion.ddpm.LatentDiffusion
+  params:
+    linear_start: 0.0015
+    linear_end: 0.0195
+    num_timesteps_cond: 1
+    log_every_t: 100
+    timesteps: 1000
+    first_stage_key: target_image
+    cond_stage_key: source_image
+    cond_stage_trainable: false
+    cond_stage_instruction_key: text
+    cond_stage_instruction_embedder_trainable: true
+    conditioning_key: hybrid
+    image_size: 32
+    channels: 4
+    monitor: val/loss_simple_ema
+    unet_config:
+      target: ldm.modules.diffusionmodules.openaimodel.UNetModel
+      params:
+        image_size: 32
+        in_channels: 8
+        out_channels: 4
+        model_channels: 128
+        attention_resolutions:
+        - 8
+        - 4
+        - 2
+        num_res_blocks: 2
+        channel_mult:
+        - 1
+        - 2
+        - 3
+        - 4
+        num_heads: 8
+        resblock_updown: true
+        use_spatial_transformer: true
+        transformer_depth: 1
+        context_dim: 512
+    first_stage_config:
+      target: ldm.models.autoencoder.VQModel
+      params:
+        ckpt_path: models/gqa_inpaint/first_stage/vq-f8-cb16384-openimages.ckpt
+        monitor: val/rec_loss
+        embed_dim: 4
+        n_embed: 16384
+        lossconfig:
+          target: torch.nn.Identity
+        ddconfig:
+          double_z: false
+          z_channels: 4
+          resolution: 256
+          in_channels: 3
+          out_ch: 3
+          ch: 128
+          ch_mult:
+          - 1
+          - 2
+          - 2
+          - 4
+          num_res_blocks: 2
+          attn_resolutions:
+          - 32
+          dropout: 0.0
+    cond_stage_config: __is_first_stage__
+    cond_stage_instruction_embedder_config:
+      target: ldm.modules.encoders.modules.BERTEmbedder
+      params:
+        n_embed: 512
+        n_layer: 16
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 64
+    num_workers: 8
+    train:
+      target: dataset.gqa_inpaint.GQAInpaintTrain
+      params:
+        images_root: data/gqa-inpaint/images
+        images_inpainted_root: data/gqa-inpaint/images_inpainted
+        masks_root: data/gqa-inpaint/masks
+        scene_json_path: data/gqa-inpaint/train_scenes.json
+        train_instructions_path: data/gqa-inpaint/train_instructions_qwen2.5-14b-instruct.json
+        max_relations: 1
+        simplify_augment: true
+        instruction_type: remove
+        size: 256
+        irrelevant_text_prob: 0.2
+    validation:
+      target: dataset.gqa_inpaint.GQAInpaintTest
+      params:
+        images_root: data/gqa-inpaint/images
+        images_inpainted_root: data/gqa-inpaint/images_inpainted
+        masks_root: data/gqa-inpaint/masks
+        scene_json_path: data/gqa-inpaint/test_scenes.json
+        max_relations: 1
+        simplify_augment: true
+        instruction_type: remove
+        size: 256
+    test:
+      target: dataset.gqa_inpaint.GQAInpaintTest
+      params:
+        images_root: data/gqa-inpaint/images
+        images_inpainted_root: data/gqa-inpaint/images_inpainted
+        masks_root: data/gqa-inpaint/masks
+        scene_json_path: data/gqa-inpaint/test_scenes.json
+        test_instructions_path: data/gqa-inpaint/test_instructions_qwen2.5-14b-instruct.json
+        max_relations: 1
+        simplify_augment: true
+        instruction_type: remove
+        size: 256

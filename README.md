@@ -20,7 +20,7 @@ In this work, we are interested in an image inpainting algorithm that estimates 
 We set various GAN and diffusion-based baselines and run experiments on synthetic and real image datasets. We compare methods with different evaluation metrics that measure the quality and accuracy of the models and show significant quantitative and qualitative improvements.
 
 ## News
-
+- Human-like instructions for finetuning are released. (Dec 09, 2025)
 - GQA-Inpaint pretrained model is released. (June 29, 2023)
 - GQA-Inpaint dataset is released. (June 29, 2023)
 - Inst-Inpaint training, inference, evaluation, and demo codes are released. (June 29, 2023)
@@ -125,6 +125,27 @@ python main.py --train --logdir logs --name gqa_inpaint --base configs/latent-di
 For training the model on a single GPU, put a comma after the GPU ID.
 
 Note that the GQA-Inpaint model uses a pretrained VQGAN model from [Taming Transformers](https://github.com/CompVis/taming-transformers) repository as the first stage model (autoencoder). Therefore, there is no need to train an autoencoder for this model.
+
+### Finetuning with Human-Like Instructions
+
+Inst-Inpaint can also be finetuned using natural, human-like instructions instead of the default rule-based templates. These rewritten prompts provide more realistic linguistic variation and improve the model's generalization to real user inputs. The prompts are generated using the [Qwen2.5-14B-Instruct](https://huggingface.co/Qwen/Qwen2.5-14B-Instruct) model.
+
+To download the human-like instruction files, apply the following steps after activating the environment:
+
+```
+cd data/gqa-inpaint
+gdown "https://drive.google.com/uc?id=19zS8Ui1Gg-ENLLu_ddG3-kweXGkpTzYy"
+unzip -q instructions_qwen2.5.zip
+rm instructions_qwen2.5.zip
+```
+
+To finetune Inst-Inpaint using the rewritten human-like instructions, resume training from the pretrained GQA-Inpaint checkpoint:
+
+```
+python main.py --train --base configs/latent-diffusion/gqa_inpaint-ldm-vq-f8-256x256_qwen2.5-instruct-14b.yaml --gpus 0,1,2,3 --resume models/gqa_inpaint/ldm/model.ckpt
+```
+
+If desired, the pretrained checkpoint may be copied to a separate directory before finetuning to keep outputs better organized.
 
 ## Inference
 

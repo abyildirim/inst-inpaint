@@ -6,6 +6,7 @@ import numpy as np
 import PIL
 from PIL import Image
 from torch.utils.data import Dataset
+import json
 
 RELATIONS = {
     "above",
@@ -60,7 +61,8 @@ class GQAInpaintBase(Dataset):
         instruction_type="remove", # Type of the instructions. The pair of source and target images are generated accordingly. Options: ["add","remove"]
         irrelevant_text_prob=None, # Probability of generating irrelevant instructions (source and target images are kept the same).
         max_relations=1, # Maximum number of relations to be included in the generated instructions.
-        simplify_augment=True # Generating instructions without any relation if possible with 0.5 probability.
+        simplify_augment=True, # Generating instructions without any relation if possible with 0.5 probability.
+        train_instructions_path=None # If provided, the instructions are written as human-like prompts rather than following a rule-based template.
     ):
         assert instruction_type in ["add", "remove"]
         assert max_relations >= 0
@@ -98,10 +100,17 @@ class GQAInpaintBase(Dataset):
         self.simplify_augment = simplify_augment
 
         self.use_fixed_instructions = False
+        self.use_fixed_instructions_train = False
+
         if test_instructions_path is not None:
             self.use_fixed_instructions = True
             with open(test_instructions_path) as json_file:
                 self.test_instructions = json.load(json_file)
+
+        if train_instructions_path is not None:
+            self.use_fixed_instructions_train = True
+            with open(train_instructions_path) as json_file:
+                self.train_instructions = json.load(json_file)
 
     def construct_scenes(self):
         assert self._scene_json_path
@@ -209,6 +218,18 @@ class GQAInpaintBase(Dataset):
             text = self.test_instructions[im_id]
             if self.instruction_type=="remove":
                 source_image, target_image = target_image, source_image
+                
+        elif self.use_fixed_instructions_train:
+            text = self.train_instructions[im_id]
+            if self.instruction_type=="remove":
+                source_image, target_image = target_image, source_image 
+            is_irrelevant_text = False
+            if self.irrelevant_text_prob and self.irrelevant_text_prob > random.uniform(0, 1):
+                is_irrelevant_text = True
+            if is_irrelevant_text:
+                target_image = np.copy(source_image)
+                im_id_rand = random.choice(list(self.train_instructions.keys()))
+                text = self.train_instructions[im_id_rand]
         else:
             is_irrelevant_text = False
             if self.irrelevant_text_prob and self.irrelevant_text_prob > random.uniform(0, 1):
